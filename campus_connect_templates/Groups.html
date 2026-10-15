@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Connect - Groups</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="script.js" defer></script>
+  <style>
+    .page-wrap{max-width:1200px;margin:2rem auto;padding:0 1rem}.page-heading{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem}.page-heading p,.muted{color:var(--text-muted)}.group-tools{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem}.group-tools input,.group-tools select{padding:.75rem;border:1px solid var(--border-color);border-radius:.375rem;background:white;font:inherit;min-width:190px}
+    .group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.group-card{overflow:hidden;padding:0}.group-banner{padding:1.35rem;color:white;background:linear-gradient(135deg,#4F46E5,#818cf8);min-height:105px;display:flex;align-items:flex-end;justify-content:space-between;gap:.5rem}.group-banner.green{background:linear-gradient(135deg,#047857,#34d399)}.group-banner.pink{background:linear-gradient(135deg,#9d174d,#f472b6)}.group-banner.orange{background:linear-gradient(135deg,#9a3412,#fb923c)}.group-icon{font-size:2.2rem}.group-category{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase}.group-body{padding:1.25rem}.group-body h2{font-size:1.1rem;margin-bottom:.5rem}.group-body p{font-size:.9rem}.group-meta{display:flex;justify-content:space-between;gap:.5rem;margin:1rem 0;color:var(--text-muted);font-size:.8rem}.group-body .btn{width:100%}.pill{display:inline-block;padding:.2rem .6rem;border-radius:99px;background:#EEF2FF;color:var(--primary);font-size:.75rem;font-weight:600}.empty-state{grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)}.group-note{margin-top:1rem;font-size:.85rem;color:var(--text-muted)}
+    @media(max-width:900px){.group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.group-grid{grid-template-columns:1fr}.group-tools input,.group-tools select{width:100%}}
+  </style>
+</head>
+<body class="bg-light">
+  <nav class="navbar"><div class="nav-container"><h2 class="logo">Campus Connect</h2><div class="nav-links"><a href="dashboard.html">Home</a><a href="Events.html" data-testid="nav-events">Events</a><a href="Groups.html" class="active" data-testid="nav-groups">Groups</a><a href="profile.html" class="btn btn-outline" data-testid="nav-profile">Profile</a><a href="index.html" class="btn btn-outline" data-testid="nav-logout">Logout</a></div></div></nav>
+  <main class="page-wrap">
+    <div class="page-heading"><div><h1>Student Groups</h1><p>Find your community, collaborate, and learn together.</p></div><span class="pill" id="membership-count">0 joined</span></div>
+    <div class="group-tools"><input id="group-search" type="search" placeholder="Search groups..." aria-label="Search groups"><select id="group-category" aria-label="Filter groups"><option value="all">All categories</option><option value="Academics">Academics</option><option value="Technology">Technology</option><option value="Community">Community</option><option value="Sports">Sports</option><option value="Creative">Creative</option></select><select id="group-status" aria-label="Filter membership"><option value="all">All groups</option><option value="joined">My groups</option><option value="open">Not joined</option></select></div>
+    <section class="group-grid" id="group-grid" aria-live="polite"></section>
+    <p class="group-note">Demo note: group memberships are saved in this browser using local storage. This page does not connect to a backend or send membership requests to a server.</p>
+  </main>
+  <footer class="site-footer"><p>Campus Connect - Smart College Event &amp; Resource Management System</p></footer>
+  <script>
+    (()=>{
+      const groups=[
+        {id:'ai-ml-club',name:'AI & Machine Learning Club',category:'Technology',icon:'🤖',tone:'',members:86,description:'Explore machine learning, build AI projects, and share research and learning resources.'},
+        {id:'web-dev',name:'Web Developers Community',category:'Technology',icon:'💻',tone:'green',members:124,description:'Practice HTML, CSS, JavaScript, and modern web development through peer projects.'},
+        {id:'dsa-study',name:'DSA Study Circle',category:'Academics',icon:'📚',tone:'orange',members:52,description:'Solve data structures and algorithms problems and prepare for technical interviews.'},
+        {id:'innovation',name:'Innovation & Startup Cell',category:'Community',icon:'🚀',tone:'pink',members:73,description:'Meet student founders, brainstorm ideas, and collaborate on prototypes and pitches.'},
+        {id:'sports',name:'Campus Sports Network',category:'Sports',icon:'🏐',tone:'green',members:98,description:'Connect with players, find teammates, and coordinate friendly matches and practice.'},
+        {id:'design',name:'Creative Design Society',category:'Creative',icon:'🎨',tone:'pink',members:41,description:'Share design work, learn UI/UX basics, and take part in creative challenges.'}
+      ];
+      const key='campusConnectGroupMemberships';
+      const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}};
+      const save=items=>localStorage.setItem(key,JSON.stringify(items));
+      const grid=document.getElementById('group-grid');
+      function render(){
+        const memberships=read();const query=document.getElementById('group-search').value.trim().toLowerCase();const category=document.getElementById('group-category').value;const status=document.getElementById('group-status').value;
+        const filtered=groups.filter(g=>(g.name+' '+g.description+' '+g.category).toLowerCase().includes(query)&&(category==='all'||g.category===category)&&(status==='all'||(status==='joined'?memberships.includes(g.id):!memberships.includes(g.id))));
+        document.getElementById('membership-count').textContent=memberships.length+' joined';grid.replaceChildren();
+        if(!filtered.length){const empty=document.createElement('div');empty.className='card empty-state';empty.textContent='No groups match your search. Try a different keyword or category.';grid.append(empty);return;}
+        filtered.forEach(g=>{const joined=memberships.includes(g.id);const card=document.createElement('article');card.className='card group-card';card.innerHTML=`<div class="group-banner ${g.tone}"><span class="group-category">${g.category}</span><span class="group-icon" aria-hidden="true">${g.icon}</span></div><div class="group-body"><h2></h2><p class="muted"></p><div class="group-meta"><span>👥 <span class="member-number"></span> members</span><span>${joined?'Member':'Open to join'}</span></div><button class="btn ${joined?'btn-outline':'btn-primary'}" type="button">${joined?'Leave group':'Join group'}</button></div>`;card.querySelector('h2').textContent=g.name;card.querySelector('.muted').textContent=g.description;card.querySelector('.member-number').textContent=g.members+(joined?1:0);card.querySelector('button').addEventListener('click',()=>{const next=read();if(next.includes(g.id))save(next.filter(id=>id!==g.id));else next.push(g.id),save(next);render();});grid.append(card);});
+      }
+      ['group-search','group-category','group-status'].forEach(id=>document.getElementById(id).addEventListener(id==='group-search'?'input':'change',render));render();
+    })();
+  </script>
+</body>
+</html>

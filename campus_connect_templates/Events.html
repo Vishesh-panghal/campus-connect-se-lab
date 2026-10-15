@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Connect - Events</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="script.js" defer></script>
+  <style>
+    .page-wrap{max-width:1200px;margin:2rem auto;padding:0 1rem}.page-heading{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem}.page-heading p,.muted{color:var(--text-muted)}
+    .event-tools{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem}.event-tools input,.event-tools select{padding:.75rem;border:1px solid var(--border-color);border-radius:.375rem;background:white;font:inherit;min-width:180px}
+    .event-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.event-card{padding:0;overflow:hidden}.event-banner{padding:1.4rem;color:white;background:linear-gradient(135deg,#4F46E5,#818cf8);min-height:115px;display:flex;flex-direction:column;justify-content:space-between}.event-banner.green{background:linear-gradient(135deg,#047857,#34d399)}.event-banner.pink{background:linear-gradient(135deg,#9d174d,#f472b6)}.event-banner.orange{background:linear-gradient(135deg,#9a3412,#fb923c)}.event-banner .event-type{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;opacity:.9}.event-body{padding:1.25rem}.event-body h2{font-size:1.1rem;margin-bottom:.5rem}.event-meta{display:grid;gap:.4rem;color:var(--text-muted);font-size:.875rem;margin:1rem 0}.event-body .btn{width:100%}.pill{display:inline-block;padding:.2rem .6rem;border-radius:99px;background:#EEF2FF;color:var(--primary);font-size:.75rem;font-weight:600}.empty-state{grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)}
+    @media(max-width:900px){.event-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.event-grid{grid-template-columns:1fr}.event-tools input,.event-tools select{width:100%}}
+  </style>
+</head>
+<body class="bg-light">
+  <nav class="navbar"><div class="nav-container"><h2 class="logo">Campus Connect</h2><div class="nav-links"><a href="dashboard.html">Home</a><a href="Events.html" class="active" data-testid="nav-events">Events</a><a href="Groups.html" data-testid="nav-groups">Groups</a><a href="profile.html" class="btn btn-outline" data-testid="nav-profile">Profile</a><a href="index.html" class="btn btn-outline" data-testid="nav-logout">Logout</a></div></div></nav>
+  <main class="page-wrap">
+    <div class="page-heading"><div><h1>Campus Events</h1><p>Discover what's happening on campus and reserve your spot.</p></div><span class="pill" id="registration-count">0 registrations</span></div>
+    <div class="event-tools"><input id="event-search" type="search" placeholder="Search events..." aria-label="Search events"><select id="event-category" aria-label="Filter by category"><option value="all">All categories</option><option value="Technology">Technology</option><option value="Workshop">Workshop</option><option value="Culture">Culture</option><option value="Sports">Sports</option></select><select id="event-status" aria-label="Filter by registration"><option value="all">All events</option><option value="registered">My registrations</option><option value="open">Not registered</option></select></div>
+    <section class="event-grid" id="event-grid" aria-live="polite"></section>
+  </main>
+  <footer class="site-footer"><p>Campus Connect - Smart College Event &amp; Resource Management System</p></footer>
+  <script>
+    (() => {
+      const events = [
+        {id:'hackathon-2026',title:'Campus Hackathon 2026',category:'Technology',date:'2026-10-20',time:'9:00 AM – 6:00 PM',venue:'Main Hall',description:'Team up, build a prototype, and present your solution to real-world problems.',banner:'',spots:120},
+        {id:'ai-talk',title:'Tech Talk: AI & the Future',category:'Technology',date:'2026-10-23',time:'11:00 AM – 12:30 PM',venue:'Room 304, Innovation Block',description:'Explore practical applications of artificial intelligence with fellow students.',banner:'green',spots:80},
+        {id:'web-workshop',title:'Web Development Workshop',category:'Workshop',date:'2026-10-25',time:'2:00 PM – 4:00 PM',venue:'Computer Lab 2',description:'Build a responsive webpage and learn useful frontend development techniques.',banner:'orange',spots:40},
+        {id:'cultural-night',title:'Cultural Night',category:'Culture',date:'2026-10-28',time:'5:00 PM – 8:00 PM',venue:'Open Air Theatre',description:'Celebrate campus talent with music, dance, and performances.',banner:'pink',spots:250},
+        {id:'sports-meet',title:'Inter-Department Sports Meet',category:'Sports',date:'2026-11-02',time:'8:00 AM – 1:00 PM',venue:'College Sports Ground',description:'Register your team and take part in friendly inter-department competitions.',banner:'green',spots:160},
+        {id:'design-lab',title:'UI/UX Design Sprint',category:'Workshop',date:'2026-11-05',time:'10:00 AM – 1:00 PM',venue:'Innovation Block, Lab 1',description:'Practice user research, wireframing, and rapid interface prototyping.',banner:'',spots:35}
+      ];
+      const key='campusConnectEventRegistrations';
+      const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}};
+      const save=(items)=>localStorage.setItem(key,JSON.stringify(items));
+      const dateLabel=(value)=>new Date(value+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+      const grid=document.getElementById('event-grid');
+      function render(){
+        const registrations=read();
+        const query=document.getElementById('event-search').value.trim().toLowerCase();
+        const category=document.getElementById('event-category').value;
+        const status=document.getElementById('event-status').value;
+        const filtered=events.filter(e=>(e.title+' '+e.description+' '+e.venue+' '+e.category).toLowerCase().includes(query)&&(category==='all'||e.category===category)&&(status==='all'||(status==='registered'?registrations.includes(e.id):!registrations.includes(e.id))));
+        document.getElementById('registration-count').textContent=registrations.length+' registration'+(registrations.length===1?'':'s');
+        grid.replaceChildren();
+        if(!filtered.length){const empty=document.createElement('div');empty.className='card empty-state';empty.textContent='No events match your search. Try another keyword or filter.';grid.append(empty);return;}
+        filtered.forEach(e=>{const registered=registrations.includes(e.id);const card=document.createElement('article');card.className='card event-card';card.innerHTML=`<div class="event-banner ${e.banner}"><span class="event-type">${e.category}</span><strong>${dateLabel(e.date)}</strong></div><div class="event-body"><h2></h2><p class="muted"></p><div class="event-meta"><span>🕒 ${e.time}</span><span>📍 ${e.venue}</span><span>👥 ${e.spots} places available</span></div><button class="btn ${registered?'btn-outline':'btn-primary'}" type="button">${registered?'Cancel registration':'Register for event'}</button></div>`;card.querySelector('h2').textContent=e.title;card.querySelector('.muted').textContent=e.description;card.querySelector('button').addEventListener('click',()=>{const next=read();if(next.includes(e.id)){save(next.filter(id=>id!==e.id));}else{next.push(e.id);save(next);}render();});grid.append(card);});
+      }
+      ['event-search','event-category','event-status'].forEach(id=>document.getElementById(id).addEventListener(id==='event-search'?'input':'change',render));render();
+    })();
+  </script>
+</body>
+</html>
